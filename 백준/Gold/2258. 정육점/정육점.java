@@ -23,11 +23,11 @@ public class Main {
 
         Arrays.sort(cost, new Comparator<int[]>() {
             @Override
-            public int compare(int[] mass, int[] price) {
-                if (Integer.compare(mass[1], price[1]) == 0) {
-                    return Integer.compare(price[0], mass[0]);
+            public int compare(int[] o1, int[] o2) {
+                if (Integer.compare(o1[1], o2[1]) == 0) {
+                    return Integer.compare(o2[0], o1[0]);
                 }
-                return Integer.compare(mass[1], price[1]);
+                return Integer.compare(o1[1], o2[1]);
             }
         });
 
