@@ -26,9 +26,9 @@ public class Main {
         arr = new int[n][m];
 
         for (int i=0; i<n; i++){
-            String[] input = br.readLine().split("");
+            String input = br.readLine();
             for (int j=0; j<m; j++){
-                arr[i][j] = Integer.parseInt(input[j]);
+                arr[i][j] = Integer.parseInt(String.valueOf(input.charAt(j)));
             }
         }
         visit = new int[n][m][2];
@@ -36,6 +36,9 @@ public class Main {
 
         System.out.println(bfs(0, 0, 0));
     }
+    // 3차원 배열로 벽을 부술때랑 아닐때를 저장
+    // visited[n][m][0]은 벽을 한번도 안부수고 탐색한 경우
+    // visited[n][m][1]은 벽을 한번 부수고 탐색한 경우
     static int bfs(int x, int y, int z){
         Queue<Node> q = new LinkedList<>();
         q.add(new Node(x, y, z));
