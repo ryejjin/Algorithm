@@ -1,124 +1,110 @@
-import java.util.LinkedList;
-import java.util.Scanner;
+import java.io.*;
+import java.util.*;
 
 public class Main {
-    static final int WHITE = 0, RED = 1, BLUE = 2;
-    static final int[] change = { 1, 0, 3, 2 };
-    // →, ←, ↑, ↓
-    static final int[] dr = { 0, 0, -1, 1 };
-    static final int[] dc = { 1, -1, 0, 0 };
-
-    static int N, K;
-    static int[][] map;
-    static LinkedList<Integer>[][] state;
-    static Horse[] horses;
+    static int n, k, turn;
+    static int[][] arr;
+    static int[] change = {1, 0, 3, 2};
+    static int[] dr = {0, 0, -1, 1};
+    static int[] dc = {1, -1, 0, 0};
+    static LinkedList<Integer>[][] chess;
+    static Horse[] horse;
 
     static class Horse {
-        int r, c, dir;
+        int row, col, dir;
 
-        Horse(int r, int c, int dir) {
-            this.r = r;
-            this.c = c;
+        Horse(int row, int col, int dir) {
+            this.row = row;
+            this.col = col;
             this.dir = dir;
         }
     }
 
-    public static void main(String[] args) {
-        Scanner sc = new Scanner(System.in);
-        N = sc.nextInt(); // 체스판의 크기 N
-        K = sc.nextInt(); // 말의 개수 K
+    public static void main(String[] args) throws IOException {
+        BufferedReader br = new BufferedReader(new InputStreamReader(System.in));
+        StringTokenizer st = new StringTokenizer(br.readLine());
+        n = Integer.parseInt(st.nextToken());
+        k = Integer.parseInt(st.nextToken());
+        arr = new int[n][n];
+        chess = new LinkedList[n][n];
 
-        map = new int[N][N]; // 체스판 색상 정보
-        state = new LinkedList[N][N]; // 체스판에 쌓인 말의 순서
-
-        // 체스판의 정보
-        for (int i = 0; i < N; i++) {
-            for (int j = 0; j < N; j++) {
-                map[i][j] = sc.nextInt();
-                state[i][j] = new LinkedList<>();
+        // 체스판의 정보 입력
+        for (int i = 0; i < n; i++) {
+            st = new StringTokenizer(br.readLine());
+            for (int j = 0; j < n; j++) {
+                arr[i][j] = Integer.parseInt(st.nextToken());
+                chess[i][j] = new LinkedList<>();
             }
         }
 
-        // 말의 정보
-        horses = new Horse[K + 1]; // 1 ~ K번 말
-        for (int i = 1; i <= K; i++) {
-            int r = sc.nextInt() - 1;
-            int c = sc.nextInt() - 1;
-            int dir = sc.nextInt() - 1;
-            horses[i] = new Horse(r, c, dir);
-            state[r][c].add(i);
+        horse = new Horse[k + 1];
+        // 말의 정보 입력
+        for (int info = 1; info <= k; info++) {
+            st = new StringTokenizer(br.readLine());
+            int row = Integer.parseInt(st.nextToken()) - 1;
+            int col = Integer.parseInt(st.nextToken()) - 1;
+            int dir = Integer.parseInt(st.nextToken()) - 1;
+            horse[info] = new Horse(row, col, dir);
+            chess[row][col].add(info);
         }
 
-        System.out.println(start());
-
+        System.out.println(game());
     }
 
-    private static int start() {
+    public static int game() {
         boolean flag = true;
-        int times = 0;
         while (flag) {
-            times++;
-            if (times > 1000)
+            turn++;
+            if (turn > 1000)
                 break;
 
-            for (int i = 1; i <= K; i++) {
-                Horse h = horses[i];
-                int r = h.r;
-                int c = h.c;
+            for (int i = 1; i <= k; i++) {
+                Horse h = horse[i];
+                int row = h.row;
+                int col = h.col;
 
-                // 가장 아래쪽 말이 아니라면 PASS
-                if (state[r][c].get(0) != i)
+                if (chess[row][col].get(0) != i)
                     continue;
 
-                int nr = r + dr[h.dir];
-                int nc = c + dc[h.dir];
+                int nr = row + dr[h.dir];
+                int nc = col + dc[h.dir];
 
-                // 말이 이동하려는 칸이 파란색인 경우 + 체스판을 벗어나는 경우
-                if (!isRange(nr, nc) || map[nr][nc] == BLUE) {
-                    // 방향 반대로
+                if (!isRange(nr, nc) || arr[nr][nc] == 2) {
                     h.dir = change[h.dir];
-                    nr = r + dr[h.dir];
-                    nc = c + dc[h.dir];
+                    nr = row + dr[h.dir];
+                    nc = col + dc[h.dir];
                 }
 
-                // 방향을 반대로 한 후에 이동하려는 칸이 파란색인 경우
-                if (!isRange(nr, nc) || map[nr][nc] == BLUE) {
+                if (!isRange(nr, nc) || arr[nr][nc] == 2) {
                     continue;
-                }
-                // 말이 이동하려는 칸이 빨간색인 경우
-                else if (map[nr][nc] == RED) {
-                    // 순서를 반대로 모든 말이 이동
-                    for (int j = state[r][c].size() - 1; j >= 0; j--) {
-                        int tmp = state[r][c].get(j);
-                        state[nr][nc].add(tmp);
-                        horses[tmp].r = nr;
-                        horses[tmp].c = nc;
+                } else if (arr[nr][nc] == 1) {
+                    for (int j = chess[row][col].size() - 1; j >= 0; j--) {
+                        int tmp = chess[row][col].get(j);
+                        chess[nr][nc].add(tmp);
+                        horse[tmp].row = nr;
+                        horse[tmp].col = nc;
                     }
-                    state[r][c].clear();
-                }
-                // 말이 이동하려는 칸이 흰색인 경우
-                else {
-                    // 모든 말이 이동
-                    for (int j = 0; j < state[r][c].size(); j++) {
-                        int tmp = state[r][c].get(j);
-                        state[nr][nc].add(tmp);
-                        horses[tmp].r = nr;
-                        horses[tmp].c = nc;
+                    chess[row][col].clear();
+                } else {
+                    for (int j = 0; j < chess[row][col].size(); j++) {
+                        int tmp = chess[row][col].get(j);
+                        chess[nr][nc].add(tmp);
+                        horse[tmp].row = nr;
+                        horse[tmp].col = nc;
                     }
-                    state[r][c].clear();
+                    chess[row][col].clear();
                 }
 
-                // 이동한 곳에 말이 4개 이상 있는가?
-                if (state[nr][nc].size() >= 4) {
+                if (chess[nr][nc].size() >= 4) {
                     flag = false;
                     break;
                 }
             }
         }
-        return flag ? -1 : times;
+        return flag ? -1 : turn;
     }
 
     static boolean isRange(int r, int c) {
-        return 0 <= r && r < N && 0 <= c && c < N;
+        return 0 <= r && r < n && 0 <= c && c < n;
     }
 }
